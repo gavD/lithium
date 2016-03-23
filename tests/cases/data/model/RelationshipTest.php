@@ -13,6 +13,7 @@ use lithium\data\model\Relationship;
 use lithium\tests\mocks\data\model\MockDatabase;
 use lithium\tests\mocks\data\model\MockGallery;
 use lithium\tests\mocks\data\model\MockImage;
+use lithium\util\Collection;
 
 class RelationshipTest extends \lithium\test\Unit {
 
@@ -31,6 +32,34 @@ class RelationshipTest extends \lithium\test\Unit {
 		Connections::remove('mockconn');
 		MockGallery::reset();
 		MockImage::reset();
+	}
+
+	/**
+	 * Mongo 2.6 support - Mongo 2.6.x breaks if an object is given instead of IDs
+	 */
+	public function testQueryOmitsKeys() {
+		$relationship = new Relationship(array(
+			'name' => 'Users',
+			'type' => 'hasMany',
+			'link' => Relationship::LINK_KEY_LIST,
+			'from' => 'my\models\Groups',
+			'to'   => 'my\models\Users',
+			'key'  => array('users' => '_id'),
+			'fieldName' => 'users'
+		));
+
+		$coll = new Collection([
+			'data' => [
+				'f' => (object)['name' => 'foo'],
+				'b' => (object)['name' => 'bar']
+			]
+		]);
+
+		$expected = array('conditions' => array('_id' => [
+			(object)['name' => 'foo'],
+			(object)['name' => 'bar']]
+		), 'fields' => null);
+		$this->assertEqual($expected, $relationship->query((object)['users' => $coll]));
 	}
 
 	public function testRespondsTo() {

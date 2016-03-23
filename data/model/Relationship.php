@@ -211,10 +211,11 @@ class Relationship extends \lithium\core\Object {
 			if (!isset($object->{$from})) {
 				return null;
 			}
+
 			$conditions[$to] = $object->{$from};
 
 			if (is_object($conditions[$to]) && $conditions[$to] instanceof Countable) {
-				$conditions[$to] = iterator_to_array($conditions[$to]);
+				$conditions[$to] = iterator_to_array($conditions[$to], false);
 			}
 		}
 		$fields = $this->fields();
